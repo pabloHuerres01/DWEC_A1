@@ -1,91 +1,80 @@
-import Pieza from './piezas.js';
 import { obtenerPedidoPorNumero } from './pedidosCRUD.js';
 
-let piezas = []; // Array para almacenar las piezas
+let piezas = [
+    { numeroPieza: 1, numeroPedido: 1, largo: 100, ancho: 50, grosor: 2, color: "Natural", ambasCaras: false },
+    { numeroPieza: 2, numeroPedido: 1, largo: 120, ancho: 60, grosor: 3, color: "Blanco", ambasCaras: true },
+    { numeroPieza: 3, numeroPedido: 2, largo: 80, ancho: 40, grosor: 2.5, color: "Madera", ambasCaras: false }
+];
 
-// Crear una pieza
+function inicializarPiezas() {
+    return piezas;
+}
+
+
 function crearPieza(pieza, pedidos) {
-    validarPieza(pieza, pedidos); // Validar antes de agregar
+    validarPieza(pieza, pedidos);
     if (piezas.some(p => p.numeroPieza === pieza.numeroPieza)) {
         throw new Error("El número de pieza ya existe.");
     }
     piezas.push(pieza);
+    guardarPiezasEnLocalStorage();
 }
 
-// Leer todas las piezas
 function obtenerPiezas() {
     return piezas;
 }
 
-// Leer piezas por número de pedido
 function obtenerPiezasPorPedido(numeroPedido) {
     return piezas.filter(p => p.numeroPedido === numeroPedido);
 }
 
-// Actualizar una pieza
 function actualizarPieza(numeroPieza, datosActualizados) {
     const pieza = piezas.find(p => p.numeroPieza === numeroPieza);
-    if (!pieza) {
-        throw new Error("Pieza no encontrada.");
-    }
+    if (!pieza) throw new Error("Pieza no encontrada.");
     Object.assign(pieza, datosActualizados);
+    guardarPiezasEnLocalStorage();
 }
 
-// Eliminar una pieza
 function eliminarPieza(numeroPieza) {
     piezas = piezas.filter(p => p.numeroPieza !== numeroPieza);
+    guardarPiezasEnLocalStorage();
 }
 
-// Validar una pieza antes de crearla
 function validarPieza(pieza, pedidos) {
     if (!Number.isInteger(pieza.numeroPieza) || pieza.numeroPieza < 1) {
-        throw new Error("El número de pieza debe ser un entero mayor o igual a 1.");
-    }
-    if (!Number.isInteger(pieza.numeroPedido) || pieza.numeroPedido < 1) {
-        throw new Error("El número de pedido debe ser un entero mayor o igual a 1.");
+        throw new Error("El número de pieza debe ser mayor o igual a 1.");
     }
     if (!pedidos.some(p => p.numeroPedido === pieza.numeroPedido)) {
-        throw new Error("El número de pedido asociado no existe.");
+        throw new Error("El pedido asociado no existe.");
     }
     if (pieza.largo <= 0 || pieza.ancho <= 0 || pieza.grosor <= 0) {
         throw new Error("Las dimensiones deben ser mayores que 0.");
     }
-}
-
-// Obtener detalles de un pedido
-function calcularSuperficie(largo, ancho) {
-    return largo * ancho;
-}
-
-function calcularVolumen(largo, ancho, grosor) {
-    return largo * ancho * grosor;
-}
-
-function obtenerDetallePedido(numeroPedido) {
-    const pedido = obtenerPedidoPorNumero(numeroPedido);
-    if (!pedido) {
-        throw new Error("Pedido no encontrado.");
+    const coloresPermitidos = ["Natural", "Blanco", "Madera", "Negro"];
+    if (!coloresPermitidos.includes(pieza.color)) {
+        throw new Error("Color no permitido.");
     }
-
-    const piezasPedido = obtenerPiezasPorPedido(numeroPedido);
-    const detalles = piezasPedido.map(pieza => ({
-        numeroPieza: pieza.numeroPieza,
-        largo: pieza.largo,
-        ancho: pieza.ancho,
-        grosor: pieza.grosor,
-        color: pieza.color,
-        superficie: calcularSuperficie(pieza.largo, pieza.ancho),
-        volumen: calcularVolumen(pieza.largo, pieza.ancho, pieza.grosor),
-    }));
-
-    return { pedido, detalles };
 }
 
+// Guardar piezas en LocalStorage
+function guardarPiezasEnLocalStorage() {
+    localStorage.setItem('piezas', JSON.stringify(piezas));
+}
+
+// Cargar piezas desde LocalStorage
+function cargarPiezasDesdeLocalStorage() {
+    const datos = localStorage.getItem('piezas');
+    if (datos) {
+        piezas = JSON.parse(datos);
+    }
+}
 export {
     crearPieza,
     obtenerPiezas,
     obtenerPiezasPorPedido,
     actualizarPieza,
     eliminarPieza,
-    obtenerDetallePedido,
+    inicializarPiezas,
+    guardarPiezasEnLocalStorage,
+    cargarPiezasDesdeLocalStorage,
 };

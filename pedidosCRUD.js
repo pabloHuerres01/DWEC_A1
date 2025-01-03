@@ -1,60 +1,79 @@
-import Pieza from './piezas.js';
-
-let piezas = []; // Array para almacenar las piezas
-
-// Crear una pieza
-function crearPieza(pieza, pedidos) {
-    validarPieza(pieza, pedidos); // Validar antes de agregar
-    if (piezas.some(p => p.numeroPieza === pieza.numeroPieza)) {
-        throw new Error("El número de pieza ya existe.");
+let pedidos = [
+    { numeroPedido: 1, cliente: "Juan Pérez", fechaPedido: "2024-01-01" },
+    { numeroPedido: 2, cliente: "Ana López", fechaPedido: "2024-01-05" }
+]; // Array para almacenar los pedidos
+function inicializarPedidos() {
+    return pedidos;
+}
+function crearPedido(pedido) {
+    validarPedido(pedido);
+    if (pedidos.some(p => p.numeroPedido === pedido.numeroPedido)) {
+        throw new Error("El número de pedido ya existe.");
     }
-    piezas.push(pieza);
+    pedidos.push(pedido);
+    guardarPedidosEnLocalStorage();
+}
+// Guardar pedidos en LocalStorage
+function guardarPedidosEnLocalStorage() {
+    localStorage.setItem('pedidos', JSON.stringify(pedidos));
 }
 
-// Leer todas las piezas
-function obtenerPiezas() {
-    return piezas;
-}
-
-// Leer piezas por número de pedido
-function obtenerPiezasPorPedido(numeroPedido) {
-    return piezas.filter(p => p.numeroPedido === numeroPedido);
-}
-
-// Actualizar una pieza
-function actualizarPieza(numeroPieza, datosActualizados) {
-    const pieza = piezas.find(p => p.numeroPieza === numeroPieza);
-    if (!pieza) {
-        throw new Error("Pieza no encontrada.");
+// Cargar pedidos desde LocalStorage
+function cargarPedidosDesdeLocalStorage() {
+    const datos = localStorage.getItem('pedidos');
+    if (datos) {
+        pedidos = JSON.parse(datos);
     }
-    Object.assign(pieza, datosActualizados);
+}
+// Leer todos los pedidos
+function obtenerPedidos() {
+    return pedidos;
 }
 
-// Eliminar una pieza
-function eliminarPieza(numeroPieza) {
-    piezas = piezas.filter(p => p.numeroPieza !== numeroPieza);
+// Leer un pedido por su número
+function obtenerPedidoPorNumero(numeroPedido) {
+    return pedidos.find(p => p.numeroPedido === numeroPedido) || null;
 }
 
-// Validar una pieza antes de crearla
-function validarPieza(pieza, pedidos) {
-    if (!Number.isInteger(pieza.numeroPieza) || pieza.numeroPieza < 1) {
-        throw new Error("El número de pieza debe ser un entero mayor o igual a 1.");
+function actualizarPedido(numeroPedido, datosActualizados) {
+    const pedido = pedidos.find(p => p.numeroPedido === numeroPedido);
+    if (!pedido) {
+        throw new Error("Pedido no encontrado.");
     }
-    if (!Number.isInteger(pieza.numeroPedido) || pieza.numeroPedido < 1) {
+    Object.assign(pedido, datosActualizados);
+    guardarPedidosEnLocalStorage();
+}
+
+function eliminarPedido(numeroPedido) {
+    const pedidoIndex = pedidos.findIndex(p => p.numeroPedido === numeroPedido);
+    if (pedidoIndex === -1) {
+        throw new Error("Pedido no encontrado.");
+    }
+    pedidos.splice(pedidoIndex, 1);
+    guardarPedidosEnLocalStorage();
+}
+
+// Validar un pedido antes de crearlo
+function validarPedido(pedido) {
+    if (!Number.isInteger(pedido.numeroPedido) || pedido.numeroPedido < 1) {
         throw new Error("El número de pedido debe ser un entero mayor o igual a 1.");
     }
-    if (!pedidos.some(p => p.numeroPedido === pieza.numeroPedido)) {
-        throw new Error("El número de pedido asociado no existe.");
+    if (typeof pedido.cliente !== 'string' || pedido.cliente.trim() === '') {
+        throw new Error("El cliente debe ser un nombre válido.");
     }
-    if (pieza.largo <= 0 || pieza.ancho <= 0 || pieza.grosor <= 0) {
-        throw new Error("Las dimensiones deben ser mayores que 0.");
+    const fecha = new Date(pedido.fechaPedido);
+    if (isNaN(fecha) || fecha > new Date()) {
+        throw new Error("La fecha de pedido debe ser válida y no puede ser futura.");
     }
 }
 
 export {
-    crearPieza,
-    obtenerPiezas,
-    obtenerPiezasPorPedido,
-    actualizarPieza,
-    eliminarPieza,
+    crearPedido,
+    obtenerPedidos,
+    obtenerPedidoPorNumero,
+    actualizarPedido,
+    eliminarPedido,
+    inicializarPedidos,
+    guardarPedidosEnLocalStorage,
+    cargarPedidosDesdeLocalStorage,
 };

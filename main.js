@@ -1,8 +1,21 @@
-import { crearPedido, obtenerPedidos } from './pedidosCRUD.js';
-import { crearPieza, obtenerPiezas } from './piezasCRUD.js';
+import {
+    crearPedido,
+    obtenerPedidos,
+    actualizarPedido,
+    eliminarPedido,
+    inicializarPedidos,
+    cargarPedidosDesdeLocalStorage
+} from './pedidosCRUD.js';
+import {
+    inicializarPiezas,
+    crearPieza,
+    obtenerPiezas,
+    eliminarPieza,
+    actualizarPieza,
+    cargarPiezasDesdeLocalStorage
+} from './piezasCRUD.js';
 import { obtenerDetallePedido } from './detallePedidos.js';
 
-// Referencias a elementos del DOM
 const formPedido = document.getElementById('formPedido');
 const listaPedidos = document.getElementById('listaPedidos');
 const formPieza = document.getElementById('formPieza');
@@ -10,29 +23,101 @@ const listaPiezas = document.getElementById('listaPiezas');
 const formDetallePedido = document.getElementById('formDetallePedido');
 const tablaDetalle = document.getElementById('tablaDetalle').querySelector('tbody');
 
-// Actualizar la lista de pedidos en el DOM
+function inicializarDatos() {
+    cargarPedidosDesdeLocalStorage();
+    cargarPiezasDesdeLocalStorage();
+    actualizarListaPedidos();
+    actualizarListaPiezas();
+}
+
+inicializarDatos();
+
 function actualizarListaPedidos() {
     listaPedidos.innerHTML = '';
     const pedidos = obtenerPedidos();
     pedidos.forEach(pedido => {
         const li = document.createElement('li');
         li.textContent = `Pedido #${pedido.numeroPedido} - ${pedido.cliente} (${pedido.fechaPedido})`;
+
+        const eliminarBtn = document.createElement('button');
+        eliminarBtn.textContent = 'Eliminar';
+        eliminarBtn.addEventListener('click', () => {
+            try {
+                eliminarPedido(pedido.numeroPedido);
+                actualizarListaPedidos();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        const modificarBtn = document.createElement('button');
+        modificarBtn.textContent = 'Modificar';
+        modificarBtn.addEventListener('click', () => {
+            const nuevoCliente = prompt("Nuevo nombre del cliente:", pedido.cliente);
+            const nuevaFecha = prompt("Nueva fecha de pedido (YYYY-MM-DD):", pedido.fechaPedido);
+
+            try {
+                actualizarPedido(pedido.numeroPedido, {
+                    cliente: nuevoCliente,
+                    fechaPedido: nuevaFecha
+                });
+                actualizarListaPedidos();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        li.appendChild(eliminarBtn);
+        li.appendChild(modificarBtn);
         listaPedidos.appendChild(li);
     });
 }
 
-// Actualizar la lista de piezas en el DOM
 function actualizarListaPiezas() {
     listaPiezas.innerHTML = '';
     const piezas = obtenerPiezas();
     piezas.forEach(pieza => {
         const li = document.createElement('li');
         li.textContent = `Pieza #${pieza.numeroPieza} - Pedido #${pieza.numeroPedido} - ${pieza.largo}x${pieza.ancho}x${pieza.grosor} (${pieza.color})`;
+
+        const eliminarBtn = document.createElement('button');
+        eliminarBtn.textContent = 'Eliminar';
+        eliminarBtn.addEventListener('click', () => {
+            try {
+                eliminarPieza(pieza.numeroPieza);
+                actualizarListaPiezas();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        const modificarBtn = document.createElement('button');
+        modificarBtn.textContent = 'Modificar';
+        modificarBtn.addEventListener('click', () => {
+            const nuevoLargo = parseFloat(prompt("Nuevo largo (cm):", pieza.largo)) || pieza.largo;
+            const nuevoAncho = parseFloat(prompt("Nuevo ancho (cm):", pieza.ancho)) || pieza.ancho;
+            const nuevoGrosor = parseFloat(prompt("Nuevo grosor (cm):", pieza.grosor)) || pieza.grosor;
+            const nuevoColor = prompt("Nuevo color:", pieza.color) || pieza.color;
+
+            try {
+                actualizarPieza(pieza.numeroPieza, {
+                    largo: nuevoLargo,
+                    ancho: nuevoAncho,
+                    grosor: nuevoGrosor,
+                    color: nuevoColor,
+                });
+                actualizarListaPiezas();
+            } catch (error) {
+                alert(error.message);
+            }
+        });
+
+        li.appendChild(eliminarBtn);
+        li.appendChild(modificarBtn);
         listaPiezas.appendChild(li);
     });
 }
 
-// Manejar el envío del formulario de pedidos
 formPedido.addEventListener('submit', (e) => {
     e.preventDefault();
     try {
@@ -48,7 +133,6 @@ formPedido.addEventListener('submit', (e) => {
     }
 });
 
-// Manejar el envío del formulario de piezas
 formPieza.addEventListener('submit', (e) => {
     e.preventDefault();
     try {
@@ -57,7 +141,7 @@ formPieza.addEventListener('submit', (e) => {
         const largo = parseFloat(document.getElementById('largo').value);
         const ancho = parseFloat(document.getElementById('ancho').value);
         const grosor = parseFloat(document.getElementById('grosor').value);
-        const color = document.getElementById('color').value || "Natural";
+        const color = document.getElementById('color').value; // Obtener el color seleccionado
 
         crearPieza({ numeroPieza, numeroPedido, largo, ancho, grosor, color, ambasCaras: false, cortada: false }, obtenerPedidos());
         actualizarListaPiezas();
@@ -67,17 +151,14 @@ formPieza.addEventListener('submit', (e) => {
     }
 });
 
-// Manejar el envío del formulario de detalle de pedido
+
 formDetallePedido.addEventListener('submit', (e) => {
     e.preventDefault();
     try {
         const numeroPedido = parseInt(document.getElementById('detalleNumeroPedido').value, 10);
         const { detalles } = obtenerDetallePedido(numeroPedido);
 
-        // Limpiar la tabla
         tablaDetalle.innerHTML = '';
-
-        // Rellenar la tabla con detalles de las piezas
         detalles.forEach(pieza => {
             const row = document.createElement('tr');
             row.innerHTML = `
@@ -98,6 +179,5 @@ formDetallePedido.addEventListener('submit', (e) => {
     }
 });
 
-// Inicializar listas
 actualizarListaPedidos();
 actualizarListaPiezas();

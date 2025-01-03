@@ -40,11 +40,17 @@
             <label for="grosor">Grosor (cm):</label>
             <input type="number" id="grosor" step="0.01" required>
             <label for="color">Color:</label>
-            <input type="text" id="color">
+            <select id="color">
+                <option value="Natural" selected>Natural</option>
+                <option value="Blanco">Blanco</option>
+                <option value="Madera">Madera</option>
+                <option value="Negro">Negro</option>
+            </select>
             <button type="submit">Crear Pieza</button>
         </form>
         <ul id="listaPiezas"></ul>
     </section>
+    
     <!-- Detalle de Pedido -->
     <section>
         <h2>Detalle de Pedido</h2>
